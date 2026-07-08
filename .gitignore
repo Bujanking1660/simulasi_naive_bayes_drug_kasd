@@ -1,0 +1,39 @@
+# Virtual environments
+.naivebayesvenv/
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# Python cache and temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Office temporary files (e.g., Excel locks)
+~$*.xlsx
+~$*.xls
+~$*.doc*
+~$*.ppt*
+
+# Ensure the /data directory and its contents are tracked/not ignored
+!/data/
