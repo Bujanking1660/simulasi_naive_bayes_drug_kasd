@@ -1,27 +1,29 @@
-# Tugas Besar — Naive Bayes (Data Kategorikal) pada Dataset `drug200`
+# Naive Bayes Manual — Prediksi Obat (Dataset Drug200)
 
-Notebook ini adalah implementasi tugas besar mata kuliah Kecerdasan Buatan dengan algoritma
-**Naive Bayes untuk data kategorikal**, dibangun **dari nol (from scratch)** tanpa menggunakan
-library machine learning (`sklearn`, dsb).
+Notebook ini membangun model **Naive Bayes untuk data kategorik dari nol**
+(Prior & Likelihood dihitung manual, **tanpa scikit-learn**), dibantu **pandas**
+& **numpy** untuk pengolahan data, dan **seaborn** / **matplotlib** untuk visualisasi.
+
+---
 
 ## 📁 Struktur Folder
 
 ```
 .
 ├── README.md
-├── Tugas_Besar_Naive_Bayes_drug200.ipynb   # notebook utama
-├── drug200_NAIVE_BAYES_.xlsx               # dataset asli
+├── main.ipynb          ← notebook utama
 └── data/
-    └── drug200(NAIVE BAYES).xlsx           # salinan dataset (path yang dipakai notebook)
+    └── drug200(NAIVE BAYES).xlsx
 ```
 
-> Notebook membaca dataset dari `./data/drug200(NAIVE BAYES).xlsx`. Jika kamu memindahkan notebook,
-> pastikan folder `data/` ikut dipindahkan pada lokasi yang sama, atau ubah path pada sel pembacaan
-> file di awal notebook.
+> Notebook membaca dataset dari `./data/drug200(NAIVE BAYES).xlsx`.
+> Pastikan folder `data/` berada satu level dengan `main.ipynb`.
+
+---
 
 ## 📊 Dataset
 
-`drug200` berisi 200 data pasien dengan 4 fitur **kategorikal** dan 1 label kelas:
+`drug200` berisi **200 data pasien** dengan 4 fitur **kategorikal** dan 1 label kelas:
 
 | Kolom | Tipe | Nilai |
 |---|---|---|
@@ -29,65 +31,100 @@ library machine learning (`sklearn`, dsb).
 | `BP` | kategorikal | HIGH, NORMAL, LOW |
 | `Cholesterol` | kategorikal | HIGH, NORMAL |
 | `Na_to_K` | kategorikal | HIGH, NORMAL, LOW |
-| `ClassDrug` (target) | kategorikal | DrugY, drugX, drugA, drugB, drugC |
+| `Drug` (target) | kategorikal | DrugY, drugX, drugA, drugB, drugC |
 
-## 🧠 Isi Notebook
+> **Catatan:** Kolom `Na_to_K` pada file Excel sudah dikategorikan menjadi HIGH / LOW / NORMAL
+> sehingga diperlakukan sama seperti fitur kategorik lainnya.
 
-1. **Pendahuluan** — teori Bayes, asumsi *naive*, rumus Naive Bayes kategorikal + Laplace smoothing,
-   langkah algoritma secara umum (tanpa kasus).
-2. **Dataset & Visualisasi (EDA)** — pembacaan data + grafik seaborn (distribusi kelas, sebaran fitur
-   per kelas) agar pola data mudah dipahami sebelum masuk ke perhitungan.
-3. **Simulasi Kasus (manual)** — perhitungan langkah-demi-langkah menggunakan **seluruh 200 data & 4
-   fitur**: prior → tabel kontingensi → likelihood (Laplace smoothing) → skor posterior → normalisasi →
-   keputusan kelas, lengkap dengan visualisasi bar chart prior & posterior.
-4. **Implementasi (kode program)** — fungsi Python murni: `naive_bayes_train`, `naive_bayes_predict`,
-   `evaluasi_akurasi`, `confusion_matrix_manual`, ditambah split data latih/uji manual.
-5. **Evaluasi** — akurasi model pada data uji + confusion matrix dalam bentuk heatmap seaborn.
-6. **Daftar Pustaka** — 10 referensi jurnal terkait Naive Bayes.
+---
+
+## 🧠 Daftar Isi Notebook
+
+| No. | Bagian | Keterangan |
+|---|---|---|
+| 1 | **Setup Library** | Import pandas, numpy, matplotlib, seaborn |
+| 2 | **Load Data** | Baca file Excel, tampilkan 5 data teratas & info jumlah data |
+| 3 | **Sebaran Data** | Visualisasi distribusi tiap fitur terhadap jenis obat |
+| 4 | **Prior P(Drug)** | Hitung probabilitas prior tiap kelas tanpa fitur |
+| 5 | **Likelihood Age** | Prior × P(Age \| Drug) — satu fitur saja |
+| 6 | **Likelihood BP** | Prior × P(BP \| Drug) — satu fitur saja |
+| 7 | **Likelihood Cholesterol** | Prior × P(Cholesterol \| Drug) — satu fitur saja |
+| 8 | **Likelihood Na_to_K** | Prior × P(Na_to_K \| Drug) — satu fitur saja |
+| 9 | **Input Data Uji** | Isi `pasien_baru` sesuai kasus yang ingin diuji |
+| 10 | **Hasil Prediksi** | Posterior gabungan semua fitur → rekomendasi obat |
+| 11 | **Kesimpulan** | Perbandingan kekuatan tiap fitur, fitur paling berpengaruh |
+
+### Fungsi Utama
+
+| Fungsi | Keterangan |
+|---|---|
+| `hitung_likelihood_fitur(df, kolom_fitur, kolom_label)` | Menghitung tabel likelihood P(fitur \| kelas) |
+| `uji_satu_fitur(df, kolom_fitur, kolom_label, prior, likelihood_fitur)` | Akurasi model jika hanya memakai satu fitur |
+| `prediksi(pasien, prior, tabel_likelihood)` | Prediksi kelas dari data pasien baru |
+
+---
 
 ## ⚙️ Cara Menjalankan
 
-### 1. Buat environment & install dependency
+### 1. Buat virtual environment & install dependency
+
 ```bash
 pip install openpyxl pandas numpy seaborn matplotlib jupyter
 ```
 
 ### 2. Jalankan notebook
+
 ```bash
-jupyter notebook Tugas_Besar_Naive_Bayes_drug200.ipynb
+jupyter notebook main.ipynb
 ```
-atau jalankan seluruh sel sekaligus dari terminal:
+
+atau jalankan seluruh sel sekaligus:
+
 ```bash
-jupyter nbconvert --to notebook --execute --inplace Tugas_Besar_Naive_Bayes_drug200.ipynb
+jupyter nbconvert --to notebook --execute --inplace main.ipynb
 ```
 
 ### 3. Jalankan sel dari atas ke bawah (Run All)
-Semua sel sudah diuji berjalan berurutan tanpa error. Hindari menjalankan sel secara acak karena
-beberapa sel bergantung pada variabel dari sel sebelumnya (`data`, `model`, `data_train`, dst).
 
-## 🧩 Menyesuaikan dengan Kasus Kelompok
+Semua sel sudah diuji berjalan berurutan tanpa error. Hindari menjalankan sel secara acak karena beberapa sel bergantung pada variabel dari sel sebelumnya (`df`, `prior`, `likelihood_*`, dst).
 
-Bagian **Simulasi Kasus** memakai satu baris data asli sebagai contoh query karena tidak ada file
-kasus terpisah yang disertakan. Jika dosen/kelompokmu memberi kasus khusus melalui link Google Drive,
-ubah dictionary `query` pada bagian Simulasi Kasus (Langkah 3) sesuai nilai fitur kasus tersebut —
-seluruh langkah perhitungan setelahnya akan otomatis mengikuti.
+---
 
-## 📝 Catatan untuk Laporan (Word/PPT)
+## 🔬 Mencoba Kasus Pasien Baru
 
-- Sesuai instruksi tugas, **screenshot setiap sel kode beserta output-nya** pada bagian Implementasi
-  untuk dilampirkan di laporan Word.
-- Library yang dipakai (`openpyxl`, `random`, `pandas`, `seaborn`, `matplotlib`, `numpy`) hanya untuk
-  membaca file, split data, dan **visualisasi** — bukan untuk menghitung/menjalankan algoritma Naive
-  Bayes itu sendiri (perhitungan probabilitas ditulis manual dengan `dict`/`for-loop`).
-- Bagian Daftar Pustaka berisi 10 jurnal (bukan buku/tautan web) sesuai ketentuan.
+Ubah dictionary `pasien_baru` di **bagian 9** sesuai nilai fitur kasus yang ingin diuji:
+
+```python
+pasien_baru = {
+    "Age": "OLD",           # pilihan: YOUNG / ADULT / OLD
+    "BP": "HIGH",           # pilihan: HIGH / LOW / NORMAL
+    "Cholesterol": "NORMAL",  # pilihan: HIGH / NORMAL
+    "Na_to_K": "HIGH",      # pilihan: HIGH / LOW / NORMAL
+}
+```
+
+Seluruh langkah perhitungan posterior dan visualisasi bar chart di bagian 10 akan otomatis mengikuti nilai yang diubah.
+
+---
+
+## 📝 Catatan untuk Laporan
+
+- **Tidak ada scikit-learn** — semua rumus Prior, Likelihood, dan Posterior ditulis manual menggunakan `dict` / `for-loop` / operasi pandas.
+- Library `pandas` & `numpy` digunakan hanya untuk **membaca data, pengolahan tabel, dan menyusun array** — bukan sebagai engine machine learning.
+- Library `seaborn` & `matplotlib` digunakan untuk **visualisasi** (heatmap likelihood, bar chart posterior, bar chart perbandingan fitur).
+- Lampirkan **screenshot setiap sel beserta output-nya** (terutama bagian 4–11) pada laporan Word/PPT.
+- Bagian referensi / daftar pustaka tersedia di folder `data/Referensi_Naive_Bayes/`.
+
+---
 
 ## 🔧 Requirements
 
 | Library | Fungsi |
 |---|---|
 | `openpyxl` | membaca file `.xlsx` |
-| `random` | split data latih/uji (bawaan Python) |
-| `collections.OrderedDict` | struktur data penghitung (bawaan Python) |
-| `pandas` | hanya untuk membentuk tabel saat visualisasi EDA |
-| `seaborn`, `matplotlib` | visualisasi grafik |
-| `numpy` | menyusun array confusion matrix untuk heatmap |
+| `pandas` | pengolahan data & pembentukan tabel |
+| `numpy` | operasi numerik array |
+| `seaborn` | heatmap & bar chart |
+| `matplotlib` | rendering grafik |
+| `random` *(bawaan Python)* | tidak dipakai di versi ini |
+| `collections` *(bawaan Python)* | tidak dipakai di versi ini |
