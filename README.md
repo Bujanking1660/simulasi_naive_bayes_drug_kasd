@@ -6,22 +6,23 @@ Notebook ini membangun model **Naive Bayes untuk data kategorik dari nol**
 
 ---
 
-## 📁 Struktur Folder
+## Struktur Folder
 
 ```
 .
 ├── README.md
-├── main.ipynb          ← notebook utama
+├── drug200_naive_bayes.xlsx    ← simulasi Excel (lengkap dengan CW)
+├── main_v2.ipynb               ← implementasi tanpa class weight
+├── main_v3.ipynb               ← implementasi dengan class weight
 └── data/
     └── drug200(NAIVE BAYES).xlsx
 ```
 
 > Notebook membaca dataset dari `./data/drug200(NAIVE BAYES).xlsx`.
-> Pastikan folder `data/` berada satu level dengan `main.ipynb`.
 
 ---
 
-## 📊 Dataset
+## Dataset
 
 `drug200` berisi **200 data pasien** dengan 4 fitur **kategorikal** dan 1 label kelas:
 
@@ -38,33 +39,75 @@ Notebook ini membangun model **Naive Bayes untuk data kategorik dari nol**
 
 ---
 
-## 🧠 Daftar Isi Notebook
+## Notebook
 
+### main_v2.ipynb (tanpa class weight)
 | No. | Bagian | Keterangan |
 |---|---|---|
 | 1 | **Setup Library** | Import pandas, numpy, matplotlib, seaborn |
-| 2 | **Load Data** | Baca file Excel, tampilkan 5 data teratas & info jumlah data |
-| 3 | **Sebaran Data** | Visualisasi distribusi tiap fitur terhadap jenis obat |
-| 4 | **Prior P(Drug)** | Hitung probabilitas prior tiap kelas tanpa fitur |
-| 5 | **Likelihood Age** | Prior × P(Age \| Drug) — satu fitur saja |
-| 6 | **Likelihood BP** | Prior × P(BP \| Drug) — satu fitur saja |
-| 7 | **Likelihood Cholesterol** | Prior × P(Cholesterol \| Drug) — satu fitur saja |
-| 8 | **Likelihood Na_to_K** | Prior × P(Na_to_K \| Drug) — satu fitur saja |
-| 9 | **Input Data Uji** | Isi `pasien_baru` sesuai kasus yang ingin diuji |
-| 10 | **Hasil Prediksi** | Posterior gabungan semua fitur → rekomendasi obat |
-| 11 | **Kesimpulan** | Perbandingan kekuatan tiap fitur, fitur paling berpengaruh |
+| 2 | **Load Data** | Baca file Excel, tampilkan 5 data teratas |
+| 3 | **EDA** | Visualisasi distribusi fitur terhadap jenis obat |
+| 4 | **Stratified Split 80:20** | Split manual tanpa sklearn (160 train, 40 test) |
+| 5 | **Prior P(Drug)** | Hitung probabilitas prior dari data train |
+| 6 | **Likelihood P(Fitur\|Drug)** | Tabel likelihood untuk setiap fitur |
+| 7 | **Prediksi 40 Data Test** | Naive Bayes manual + evaluasi |
+| 8 | **Evaluasi Akurasi** | Akurasi, confusion matrix, metric per kelas |
+| 9 | **Prediksi Pasien Baru** | Input manual + visualisasi posterior |
 
-### Fungsi Utama
-
-| Fungsi | Keterangan |
+### main_v3.ipynb (dengan class weight)
+Sama seperti v2, ditambah:
+| No. | Bagian |
 |---|---|
-| `hitung_likelihood_fitur(df, kolom_fitur, kolom_label)` | Menghitung tabel likelihood P(fitur \| kelas) |
-| `uji_satu_fitur(df, kolom_fitur, kolom_label, prior, likelihood_fitur)` | Akurasi model jika hanya memakai satu fitur |
-| `prediksi(pasien, prior, tabel_likelihood)` | Prediksi kelas dari data pasien baru |
+| 10 | **Class Weight** — perhitungan bobot balanced + prediksi ulang |
+| 11 | **Prediksi Pasien Baru** — dengan dan tanpa class weight |
 
 ---
 
-## ⚙️ Cara Menjalankan
+## Perbandingan Hasil
+
+### Excel (`drug200_naive_bayes.xlsx`)
+
+| Metrik | Tanpa CW | Dengan CW |
+|---|---|---|
+| Akurasi | **70.0%** (28/40) | **67.5%** (27/40) |
+| Recall drugB | 100% (3/3) | 100% (3/3) |
+| Recall drugC | 33.3% (1/3) | 100% (3/3) |
+| Recall DrugY | 77.8% (14/18) | 44.4% (8/18) |
+
+Class weight di Excel **menurunkan** akurasi (-2.5%) karena drugB sudah 100% recall tanpa CW, tetapi CW mengorbankan banyak prediksi DrugY.
+
+### Python Notebook (main_v2 / main_v3)
+
+| Metrik | Tanpa CW (v2) | Dengan CW (v3) |
+|---|---|---|
+| Akurasi | **67.5%** (27/40) | **80.0%** (32/40) |
+| Recall drugB | 0% (0/3) | 66.7% (2/3) |
+| Recall drugC | 33.3% (1/3) | 100% (3/3) |
+| Recall DrugY | 83.3% (15/18) | 72.2% (13/18) |
+
+Class weight di notebook **meningkatkan** akurasi (+12.5%) karena drugB awalnya 0% — CW memperbaiki prediksi kelas minoritas secara signifikan.
+
+### Mengapa Hasil Berbeda?
+
+Meskipun sama-sama menggunakan seed 42, **split data train/test berbeda** karena random generator:
+- **Excel** menggunakan random VBA internal
+- **Python** menggunakan `np.random.permutation`
+
+Akibatnya, distribusi kelas di train/test tidak identik, yang mengubah prior, likelihood, dan pada akhirnya efek class weight.
+
+---
+
+## Kesimpulan Akhir
+
+1. **Naive Bayes tanpa library ML** berhasil diimplementasikan dan menghasilkan akurasi 67.5%-70% hanya dari 4 fitur kategorik.
+2. **Class weight bersifat sensitif terhadap split data** — bisa sangat membantu (notebook: +12.5%) atau justru merugikan (Excel: -2.5%) tergantung apakah kelas minoritas banyak salah prediksi pada split tersebut.
+3. **Fitur BP dan Na_to_K** adalah yang paling diskriminatif, dengan likelihood 0.0 atau 1.0 untuk beberapa kelas.
+4. **Split stratified** penting untuk menjaga proporsi kelas, tetapi hasil akhir tetap dipengaruhi oleh random generator yang digunakan.
+5. Untuk laporan: sertakan **kedua hasil** (Excel dan Python) sebagai validasi silang bahwa implementasi sudah benar, dan jelaskan perbedaan split sebagai penyebab variasi angka.
+
+---
+
+## Cara Menjalankan
 
 ### 1. Buat virtual environment & install dependency
 
@@ -75,49 +118,49 @@ pip install openpyxl pandas numpy seaborn matplotlib jupyter
 ### 2. Jalankan notebook
 
 ```bash
-jupyter notebook main.ipynb
+jupyter notebook main_v2.ipynb   # tanpa class weight
+jupyter notebook main_v3.ipynb   # dengan class weight
 ```
 
 atau jalankan seluruh sel sekaligus:
 
 ```bash
-jupyter nbconvert --to notebook --execute --inplace main.ipynb
+jupyter nbconvert --to notebook --execute --inplace main_v2.ipynb
+jupyter nbconvert --to notebook --execute --inplace main_v3.ipynb
 ```
 
 ### 3. Jalankan sel dari atas ke bawah (Run All)
 
-Semua sel sudah diuji berjalan berurutan tanpa error. Hindari menjalankan sel secara acak karena beberapa sel bergantung pada variabel dari sel sebelumnya (`df`, `prior`, `likelihood_*`, dst).
+Semua sel sudah diuji berjalan berurutan tanpa error.
 
 ---
 
-## 🔬 Mencoba Kasus Pasien Baru
+## Mencoba Kasus Pasien Baru
 
-Ubah dictionary `pasien_baru` di **bagian 9** sesuai nilai fitur kasus yang ingin diuji:
+Ubah dictionary `pasien_baru` di bagian prediksi pasien baru:
 
 ```python
 pasien_baru = {
-    "Age": "OLD",           # pilihan: YOUNG / ADULT / OLD
-    "BP": "HIGH",           # pilihan: HIGH / LOW / NORMAL
-    "Cholesterol": "NORMAL",  # pilihan: HIGH / NORMAL
-    "Na_to_K": "HIGH",      # pilihan: HIGH / LOW / NORMAL
+    "Age": "OLD",           # YOUNG / ADULT / OLD
+    "BP": "HIGH",           # HIGH / LOW / NORMAL
+    "Cholesterol": "NORMAL",  # HIGH / NORMAL
+    "Na_to_K": "HIGH",      # HIGH / LOW / NORMAL
 }
 ```
 
-Seluruh langkah perhitungan posterior dan visualisasi bar chart di bagian 10 akan otomatis mengikuti nilai yang diubah.
-
 ---
 
-## 📝 Catatan untuk Laporan
+## Catatan untuk Laporan
 
-- **Tidak ada scikit-learn** — semua rumus Prior, Likelihood, dan Posterior ditulis manual menggunakan `dict` / `for-loop` / operasi pandas.
+- **Tidak ada scikit-learn** — semua rumus Prior, Likelihood, dan Posterior ditulis manual.
 - Library `pandas` & `numpy` digunakan hanya untuk **membaca data, pengolahan tabel, dan menyusun array** — bukan sebagai engine machine learning.
-- Library `seaborn` & `matplotlib` digunakan untuk **visualisasi** (heatmap likelihood, bar chart posterior, bar chart perbandingan fitur).
-- Lampirkan **screenshot setiap sel beserta output-nya** (terutama bagian 4–11) pada laporan Word/PPT.
-- Bagian referensi / daftar pustaka tersedia di folder `data/Referensi_Naive_Bayes/`.
+- Library `seaborn` & `matplotlib` digunakan untuk **visualisasi** (heatmap likelihood, bar chart posterior, confusion matrix).
+- File `drug200_naive_bayes.xlsx` berisi simulasi lengkap Excel sebagai validasi.
+- Lampirkan **screenshot setiap sel beserta output-nya** pada laporan Word/PPT.
 
 ---
 
-## 🔧 Requirements
+## Requirements
 
 | Library | Fungsi |
 |---|---|
@@ -126,5 +169,3 @@ Seluruh langkah perhitungan posterior dan visualisasi bar chart di bagian 10 aka
 | `numpy` | operasi numerik array |
 | `seaborn` | heatmap & bar chart |
 | `matplotlib` | rendering grafik |
-| `random` *(bawaan Python)* | tidak dipakai di versi ini |
-| `collections` *(bawaan Python)* | tidak dipakai di versi ini |
